@@ -67,7 +67,7 @@ class PicrossSolver() :
                     self.draw[int(key[1:])-1, start:start+fillable] = bloc[0]
                 elif key[0] == "R" :
                     self.draw[start:start+fillable, int(key[1:])-1] = bloc[0]
-                start += fillable + 1
+                start += fillable + 1 # TODO not sure of +1 (+shift maybe)
 
             else :
                 start += int(eval(bloc[1:]))
