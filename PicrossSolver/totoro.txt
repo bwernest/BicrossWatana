@@ -1,0 +1,65 @@
+l1 : b3, b3, g1
+l2 : b2, s1, b2, b1, s1, b2, g2
+l3 : b1, s3, b1, b1, s3, b1, g1, m1, g2
+l4 : b1, s3, b2, b1, s3, b1, g2, m1, g1
+l5 : b1, s4, b1, b2, s3, b1, g1, m2, g1
+l6 : b1, s4, b1, b1, s4, b1, g2, m1, g2
+l7 : b1, s4, b4, s4, b1, g3
+l8 : b2, s13, b1, g2
+l9 : b1, s2, b3, s4, b3, s2, b1, g1
+l10 : b1, b1, s2, b1, b2, s2, b2, b1, s1, b3, g2
+l11 : b3, s1, b1, b1, b1, s2, b1, b1, b1, s1, b1, g1
+l12 : b2, s1, b1, b1, s2, b1, b1, s1, b2, g1
+l13 : b3, s2, b2, b1, s1, b2, s1, b1, b1, s2, b1, b2
+l14 : b1, s3, b3, s6, b2, s4, b4
+l15 : b2, s18, b1, g1, b2
+l16 : b2, s20, g1, b2
+l17 : b1, s21, g1, s1, b1
+l18 : b2, s7, b8, s5, g2, s1, b1
+l19 : b1, s6, b2, b3, s3, g1, s2, b1
+l20 : b1, s5, b1, b3, b2, s2, g1, s1, b1
+l21 : b2, s4, b2, b2, s1, b2, b2, s3, b1
+l22 : b1, s4, b2, b1, s3, b1, b3, b1, s4, b1
+l23 : b2, s4, b1, b3, b2, s1, b2, s1, s3, b1
+l24 : b2, s3, b1, b2, s1, b2, b1, s3, b1, b1, s3, b2
+l25 : b2, s3, b1, b1, s3, b1, b1, s2, b2
+l26 : b3, s2, b1, b1, s2, b2
+l27 : b1, b1, s2, b1, b1, s2, b1
+l28 : b1, s2, b2, b1, s1, b2
+l29 : b2, s2, b1, b1, s2, b1
+l30 : b1, s2, b2, b1, s1, b2
+l31 : b2, s2, b2, b1, s1, b2
+l32 : b3, s2, b2, b5
+l33 : b17
+l34 : b6, b5, b5, b6
+
+r1 : b5, b1
+r2 : b6, b1
+r3 : b4, s4, b4, b1
+r4 : b1, b1, b3, s10, b3, b1
+r5 : b1, b1, b2, s14, b2, b1
+r6 : b5, s8, b5, s3, b1, b1
+r7 : b3, s9, b2, b3, s1, b2
+r8 : b5, b2, s11, b2, b2, b2, s1, b1
+r9 : b2, s4, b2, s2, b3, s6, b2, b2, s1, b1, s1, b2
+r10 : b1, s8, b1, b2, s4, b1, b1, s2, b3
+r11 : b2, s6, b1, b1, s4, b1, b2, s1, b3
+r12 : b3, s4, b1, b1, b1, s3, b1, b2, b2
+r13 : b3, s2, b2, b1, s4, b1, b2, b2
+r14 : b1, s2, b3, s5, b1, b2, s1, b1
+r15 : b1, s5, b1, s4, b1, b1, s2, b1
+r16 : b1, s5, b1, s4, b1, b2, s1, b1
+r17 : b1, s2, b3, s5, b1, b2, b1
+r18 : b2, s2, b2, b1, s4, b1, B2, b2
+r19 : b3, s3, b1, b1, s3, b2, b2, s1, b2
+r20 : b2, s6, b1, b1, b1, s4, b1, b1, s2, b2
+r21 : b1, s8, b1, b1, s5, b2, b2, s1, b3
+r22 : b2, s4, b1, s3, b2, s7, b2, b2, b3
+r23 : b5, b3, s10, b2, b3
+r24 : b4, s9, b2, b2, s1, b1
+r25 : b1, b1, b2, s2, g3, s4, b4, s2, b2, b1
+r26 : g4, b2, g4, s11, b2, b1
+r27 : g2, m1, g1, m1, g2, g3, b4, s3, b2, s6, b3, b1
+r28 : g2, m3, g4, b6, b7, b1
+r29 : g6, b3, b1
+r30 : g2, b1
