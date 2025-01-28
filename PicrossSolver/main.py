@@ -50,16 +50,18 @@ class PicrossSolver() :
             # Lignes évidentes
             if tip_length == self.line or tip_length == self.row :
                 self.fill_line(key, tip)
+                self.done_keys.append(key)
             
             # Méthode décalage
             max_bloc = max([int(eval(tip[i][1:])) for i in range(len(tip))])
-            shift = self.line if key[0] == "L" else self.row
+            shift = self.row if key[0] == "L" else self.line
             shift -= tip_length
             if max_bloc > shift and key not in self.done_keys :
                 self.shift(key, tip, shift)
 
     def shift(self, key:str, tip:str, shift:int) -> None :
         start = shift
+        print(key)
         for b, bloc in enumerate(tip) :
             if int(eval(bloc[1:])) > shift :
                 fillable = int(eval(bloc[1:])) - shift
@@ -99,8 +101,7 @@ class PicrossSolver() :
             self.draw[int(key[1:])-1] = line
         elif key[0] == "R" :
             self.draw[:, int(key[1:])-1] = line
-        self.done_keys.append(key)
-    
+        
     def show(self) -> None :
         disp_draw = np.zeros((self.line, self.row), dtype=int)
         colors = []
@@ -118,7 +119,9 @@ class PicrossSolver() :
 
 """___Execution_____________________________________________________________"""
 
-grid = PicrossSolver("mushroom.txt")
+level = "mushroom"
+level = "totoro"
+grid = PicrossSolver(f"{level}.txt")
 
 grid.solve()
 grid.show()
