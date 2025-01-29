@@ -5,6 +5,7 @@
 """
 """___Module________________________________________________________________"""
 
+from copy import deepcopy
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -22,10 +23,12 @@ class PicrossSolver() :
     tips : dict[str:list[str]] = {}
     draw : np.array
     done_keys : list[str] = []
+    VPs : dict[str:np.array] = {}
 
     def __init__(self, path:str) -> None :
         self.import_from_txt(path)
         self.draw = np.zeros((self.line, self.row), dtype=str)
+        self.get_VPs()
 
     def import_from_txt(self, path:str) -> None :
         with open(path, "r") as txt :
@@ -44,6 +47,15 @@ class PicrossSolver() :
             elif key[0] == "R" :
                 self.row += 1
 
+    def get_VPs(self) -> None :
+        for key, tip in self.tips.items() :
+            nb_bloc = len(tip)
+            if key[0] == "L" :
+                VP = np.ones((nb_bloc, self.row), dtype=int)
+            elif key[0] == "R" :
+                VP = np.ones((nb_bloc, self.line), dtype=int)
+            self.VPs[key] = VP
+
     def solve(self) -> None :
         for key, tip in self.tips.items() :
             tip_length = self.get_tip_length(tip)
@@ -60,8 +72,31 @@ class PicrossSolver() :
             if max_bloc > shift and key not in self.done_keys :
                 self.shift(key, tip, shift)
             
-            # Méthode full
-            self.fill_full(key, tip)
+        self.changes = 4
+        count = 0
+        while self.changes > 0 :
+            draw_start = deepcopy(self.draw)
+            count += 1
+            print(count)
+            for key, tip in self.tips.items() :
+                if key not in self.done_keys :
+                    
+                    # Méthode full
+                    self.fill_full(key, tip)
+                    self.fill_crosses(key)
+                    self.check_blocs(key, tip)
+                    if self.check_line(key) :
+                        if key[0] == "L" :
+                            for i in range(self.row) :
+                                if self.draw[int(key[1:])-1, i] == "" :
+                                    self.draw[int(key[1:])-1, i] = "X"
+                        elif key[0] == "R" :
+                            for i in range(self.line) :
+                                if self.draw[i, int(key[1:])-1] == "" :
+                                    self.draw[i, int(key[1:])-1] = "X"
+                        self.done_keys.append(key)
+            if (draw_start == self.draw).all() :
+                self.changes -= 1
 
     def shift(self, key:str, tip:list[str], shift:int) -> None :
         start = shift
@@ -92,13 +127,13 @@ class PicrossSolver() :
         range_pos = max_pos - min_pos
         if sum(VP[b, min_pos:max_pos]) == range_pos :
             shift = range_pos - bloc_length
+            print(f"{key} : {min_pos} - {max_pos} : {shift}")
             if shift < bloc_length :
-                print(f"key : {key}")
                 if key[0] == "L" :
                     self.draw[int(key[1:])-1, min_pos+shift:max_pos-shift] = bloc[0]
                 elif key[0] == "R" :
                     self.draw[min_pos+shift:max_pos-shift, int(key[1:])-1] = bloc[0]
-
+                
     def get_tip_length(self, tip:list[str]) -> int :
         lenT = len(tip)
         blocs = sum(int(eval(tip[i][1:])) for i in range(lenT))
@@ -126,7 +161,7 @@ class PicrossSolver() :
     def fill_full(self, key:str, tip:list[str]) -> None :
         
         # Initialisation
-        VP = self.get_VP(key, tip)
+        VP = self.VPs[key]
 
         # Cross
         crosses_index = self.get_crosses_index(key)
@@ -137,15 +172,20 @@ class PicrossSolver() :
         VP = self.remove_unavailable_colors(VP, key, tip)
         
         # Neighbors
+        max_b = len(tip)-1
         for b, bloc in enumerate(tip) :
             min_start = self.get_min_start(b, tip, VP)
             max_end = self.get_max_end(b, tip, VP)
+            print(f"{key} : {min_start} - {max_end}")
             VP[b, :min_start] = 0
-            VP[b, max_end+1:] = 0
+            VP[b, max_end:] = 0
+            if b > 0 : assert min_start > 0, f"Min start error : {key} : {min_start}"
+            if b < max_b : assert max_end < len(VP[0]), f"Max end error : {key} : {max_end}"
+        print(f"{key} :\n{VP}\n")
         
         # Fill
-        print(f"Final VP {key} :\n{VP}\n")
         self.VP_shift(key, tip, VP)
+        self.VPs[key] = VP
 
     def get_VP(self, key:str, tip:list[str]) -> np.array :
         nb_bloc = len(tip)
@@ -186,6 +226,7 @@ class PicrossSolver() :
                 min_start += 1
             if tip[prev][0] == tip[prev+1][0] :
                 min_start += 1
+            min_start += prev_length
             prev += 1
         self_length = int(eval(tip[b][1:]))
         while sum(VP[b][min_start:min_start+self_length]) != self_length :
@@ -201,11 +242,56 @@ class PicrossSolver() :
                 max_end -= 1
             if tip[follow][0] == tip[follow-1][0] :
                 max_end -= 1
+            max_end -= follow_length
+            max_end -= 0
             follow -= 1
         self_length = int(eval(tip[b][1:]))
         while sum(VP[b][max_end-self_length:max_end]) != self_length :
             max_end -= 1
         return max_end
+
+    def fill_crosses(self, key:str) -> None :
+        VP = self.VPs[key]
+        for k in range(VP.shape[1]) :
+            if sum(VP[:, k]) == 0 :
+                if key[0] == "L" :
+                    if self.draw[int(eval(key[1:]))-1, k] == "" :
+                        self.draw[int(eval(key[1:]))-1, k] = "X"
+                elif key[0] == "R" :
+                    if self.draw[k, int(eval(key[1:]))-1] == "" :
+                        self.draw[k, int(eval(key[1:]))-1] = "X"
+                
+    def check_line(self, key:str) -> bool :
+        line = self.draw[int(key[1:])-1] if key[0] == "L" else self.draw[:, int(key[1:])-1] 
+        if "" not in line :
+            return True
+        tip = self.tips[key]
+        str_line = ""
+        for i in range(len(line)) :
+            if line[i] == "" :
+                str_line += "X"
+            str_line += line[i]
+        line = str_line.split("X")
+        while "" in line :
+            line.remove("")
+        for k in range(len(line)) :
+            line[k] = line[k][0]+str(len(line[k]))
+        if line == tip :
+            return True
+        return False
+
+    def check_blocs(self, key:str, tip:list[str]) -> None :
+        VP = self.VPs[key]
+        for line in range(VP.shape[0]) :
+            bloc = tip[line]
+            bloc_length = int(eval(bloc[1:]))
+            if 1 in VP[line] :
+                index = list(VP[line]).index(1)
+                if sum(VP[line]) == bloc_length :
+                    if key[0] == "L" :
+                        self.draw[int(key[1:])-1, index:index+bloc_length] = bloc[0]
+                    elif key[0] == "R" :
+                        self.draw[index:index+bloc_length, int(key[1:])-1] = bloc[0]
 
     def show(self) -> None :
         disp_draw = np.zeros((self.line, self.row), dtype=int)
@@ -224,9 +310,11 @@ class PicrossSolver() :
 
 """___Execution_____________________________________________________________"""
 
-level = "mushroom"
-# level = "totoro"
+# level = "mushroom"
+level = "totoro"
 grid = PicrossSolver(f"{level}.txt")
 
 grid.solve()
 grid.show()
+
+print(np.sort(grid.done_keys))
