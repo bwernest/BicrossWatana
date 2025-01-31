@@ -83,8 +83,10 @@ class PicrossSolver() :
                     
                     # Méthode full
                     self.fill_full(key, tip)
+                    self.VP_shift(key, tip)
                     self.fill_crosses(key)
                     self.check_blocs(key, tip)
+                    self.investigate_draw(key, tip)
                     if self.check_line(key) :
                         if key[0] == "L" :
                             for i in range(self.row) :
@@ -116,8 +118,9 @@ class PicrossSolver() :
                 if tip[b][0] == tip[b+1][0] :
                     start += 1
 
-    def VP_shift(self, key:str, tip:list[str], VP:np.array) -> None :
+    def VP_shift(self, key:str, tip:list[str]) -> None :
         positions = []
+        VP = self.VPs[key]
         for b, bloc in enumerate(tip) :
             bloc_length = int(eval(bloc[1:]))
             for pos in range(len(VP[b])-bloc_length+1) :
@@ -181,10 +184,8 @@ class PicrossSolver() :
             VP[b, max_end:] = 0
             if b > 0 : assert min_start > 0, f"Min start error : {key} : {min_start}"
             if b < max_b : assert max_end < len(VP[0]), f"Max end error : {key} : {max_end}"
-        print(f"{key} :\n{VP}\n")
         
         # Fill
-        self.VP_shift(key, tip, VP)
         self.VPs[key] = VP
 
     def get_VP(self, key:str, tip:list[str]) -> np.array :
@@ -220,13 +221,20 @@ class PicrossSolver() :
     def get_min_start(self, b:int, tip:list[str], VP:np.array) -> int :
         min_start = 0
         prev = 0
+        debug_line = []
+        lenV = len(VP[prev])
         while prev < b :
             prev_length = int(eval(tip[prev][1:]))
             while sum(VP[prev][min_start:min_start+prev_length]) != prev_length :
+                if min_start > lenV-prev_length :
+                    raise ValueError(f"min_end to big :\ntip : {tip}\nb = {b}\nVP : {VP}\ndebug_line : {debug_line}")
                 min_start += 1
+                debug_line.append(0)
             if tip[prev][0] == tip[prev+1][0] :
                 min_start += 1
+                debug_line.append(0)
             min_start += prev_length
+            for _ in range(prev_length) : debug_line.append(1)
             prev += 1
         self_length = int(eval(tip[b][1:]))
         while sum(VP[b][min_start:min_start+self_length]) != self_length :
@@ -236,14 +244,19 @@ class PicrossSolver() :
     def get_max_end(self, b:int, tip:list[str], VP:np.array) -> int :
         max_end = len(VP[0])
         follow = len(tip)-1
+        debug_line = []
         while follow > b :
             follow_length = int(eval(tip[follow][1:]))
             while sum(VP[follow][max_end-follow_length:max_end]) != follow_length :
+                if max_end < 0 :
+                    raise ValueError(f"max_end to little :\ntip : {tip}\nb = {b}\nVP : {VP}\ndebug_line = {debug_line[::-1]}")
                 max_end -= 1
+                debug_line.append(0)
             if tip[follow][0] == tip[follow-1][0] :
                 max_end -= 1
+                debug_line.append(0)
             max_end -= follow_length
-            max_end -= 0
+            for _ in range(follow_length) : debug_line.append(1)
             follow -= 1
         self_length = int(eval(tip[b][1:]))
         while sum(VP[b][max_end-self_length:max_end]) != self_length :
@@ -287,11 +300,44 @@ class PicrossSolver() :
             bloc_length = int(eval(bloc[1:]))
             if 1 in VP[line] :
                 index = list(VP[line]).index(1)
+                num = int(key[1:])-1
                 if sum(VP[line]) == bloc_length :
                     if key[0] == "L" :
-                        self.draw[int(key[1:])-1, index:index+bloc_length] = bloc[0]
+                        self.draw[num, index:index+bloc_length] = bloc[0]
                     elif key[0] == "R" :
-                        self.draw[index:index+bloc_length, int(key[1:])-1] = bloc[0]
+                        self.draw[index:index+bloc_length, num] = bloc[0]
+                else :  # De la merde
+                    lenV = VP.shape[1]
+                    consecutive = bloc_length
+                    while index+consecutive+1 < lenV and sum(VP[line][index:index+consecutive+1]) == consecutive+1 :
+                        consecutive += 1
+                    if consecutive < 2*bloc_length :
+                        shift = 2*bloc_length-1-consecutive
+                        if key[0] == "L" :
+                            self.draw[num, index+shift:index+consecutive-shift]
+                        elif key[0] == "R" :
+                            self.draw[index+shift:index+consecutive-shift, num]
+
+    def investigate_draw(self, key:str, tip:list[str]) -> None :
+        VP = self.VPs[key]
+        num = int(eval(key[1:])) - 1
+        if key[0] == "L" :
+            draw_line = self.draw[num, :]
+        elif key[0] == "R" :
+            draw_line = self.draw[:, num]
+        
+        for e, elem in enumerate(draw_line) :
+            if elem == "X" :
+                VP[:, e] = np.zeros(VP.shape[1])
+            elif elem == "" :
+                pass
+            else :
+                for b, bloc in enumerate(tip) :
+                    if bloc[0] != elem :
+                        if VP[b, e] != 0 :
+                            print("oui")
+                        VP[b, e] = 0
+        self.VPs[key] = VP
 
     def show(self) -> None :
         disp_draw = np.zeros((self.line, self.row), dtype=int)
