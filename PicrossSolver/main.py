@@ -5,6 +5,11 @@
 """
 """___Module________________________________________________________________"""
 
+# BicrssWatana
+from ToolBox.Eye import Eye
+from ToolBox.Pen import Pen
+
+# Python
 from copy import deepcopy
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,27 +20,33 @@ tset_file = "mushroom.txt"
 
 """___Class_________________________________________________________________"""
 
-class PicrossSolver() :
+class PicrossSolver(Eye) :
 
     line : int = 0
     row : int = 0
     nb_color : int
     tips : dict[str:list[str]] = {}
     draw : np.array
+    solution : np.array
     done_keys : list[str] = []
     VPs : dict[str:np.array] = {}
 
     def __init__(self, path:str) -> None :
         self.import_from_txt(path)
+        self.import_sol(path)
         self.draw = np.zeros((self.line, self.row), dtype=str)
         self.get_VPs()
 
-    def import_from_txt(self, path:str) -> None :
+    def parser(self, path:str) -> list[str] :
         with open(path, "r") as txt :
             data = txt.read()
         data = data.replace(" ", "").split("\n")
         while "" in data :
             data.remove("")
+        return data
+
+    def import_from_txt(self, path:str) -> None :
+        data = self.parser(path)
         for line in data :
             key, values = line.split(":")
             key = key.upper()
@@ -46,6 +57,15 @@ class PicrossSolver() :
                 self.line += 1
             elif key[0] == "R" :
                 self.row += 1
+    
+    def import_sol(self, path:str) -> None :
+        self.solution = np.zeros((self.line, self.row), dtype=str)
+        data = self.parser(path[:-4]+"_sol.txt")
+        for l, line in enumerate(data) :
+            key, values = line.split(":")
+            values = values.split(",")[0]
+            for v, value in enumerate(values) :
+                self.solution[l, v] = value
 
     def get_VPs(self) -> None :
         for key, tip in self.tips.items() :
@@ -74,6 +94,7 @@ class PicrossSolver() :
             
         self.changes = 4
         count = 0
+        self.check_sol(self.draw, self.solution)
         while self.changes > 0 :
             draw_start = deepcopy(self.draw)
             count += 1
@@ -82,20 +103,16 @@ class PicrossSolver() :
                 if key not in self.done_keys :
                     
                     # Méthode full
+                    self.check_sol(self.draw, self.solution)
                     self.fill_full(key, tip)
                     self.VP_shift(key, tip)
                     self.fill_crosses(key)
                     self.check_blocs(key, tip)
                     self.investigate_draw(key, tip)
+                    self.check_sol(self.draw, self.solution)
                     if self.check_line(key) :
-                        if key[0] == "L" :
-                            for i in range(self.row) :
-                                if self.draw[int(key[1:])-1, i] == "" :
-                                    self.draw[int(key[1:])-1, i] = "X"
-                        elif key[0] == "R" :
-                            for i in range(self.line) :
-                                if self.draw[i, int(key[1:])-1] == "" :
-                                    self.draw[i, int(key[1:])-1] = "X"
+                        self.fill_line_with_crosses()
+                        
                         self.done_keys.append(key)
             if (draw_start == self.draw).all() :
                 self.changes -= 1
@@ -264,15 +281,13 @@ class PicrossSolver() :
         return max_end
 
     def fill_crosses(self, key:str) -> None :
+        """
+        Fills with crosses draw based on VPs.
+        """
         VP = self.VPs[key]
         for k in range(VP.shape[1]) :
             if sum(VP[:, k]) == 0 :
-                if key[0] == "L" :
-                    if self.draw[int(eval(key[1:]))-1, k] == "" :
-                        self.draw[int(eval(key[1:]))-1, k] = "X"
-                elif key[0] == "R" :
-                    if self.draw[k, int(eval(key[1:]))-1] == "" :
-                        self.draw[k, int(eval(key[1:]))-1] = "X"
+                self.draw = self.draw_value(self.draw, key, k, "X")
                 
     def check_line(self, key:str) -> bool :
         line = self.draw[int(key[1:])-1] if key[0] == "L" else self.draw[:, int(key[1:])-1] 
